@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "GovSahayak - Government Page Guide & Voice Assistant",
+  "version": "1.0.0",
+  "description": "Helps citizens understand complicated Indian government web pages with simple explanations, translation, and voice guidance.",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "GovSahayak Assistant"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"]
+    }
+  ],
+  "icons": {
+    "16": "vite.svg",
+    "48": "vite.svg",
+    "128": "vite.svg"
+  }
+}
