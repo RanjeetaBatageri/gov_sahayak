@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const MOCK_LANGUAGES = [
-  { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
-  { code: 'kn', name: 'ಕನ್ನಡ (Kannada)', flag: '🇮🇳' },
-  { code: 'ta', name: 'தமிழ் (Tamil)', flag: '🇮🇳' },
-  { code: 'te', name: 'తెలుగు (Telugu)', flag: '🇮🇳' },
-  { code: 'bn', name: 'বাংলা (Bengali)', flag: '🇮🇳' },
-  { code: 'mr', name: 'मराठी (Marathi)', flag: '🇮🇳' },
-  { code: 'gu', name: 'ગુજરાતી (Gujarati)', flag: '🇮🇳' },
-  { code: 'en', name: 'English', flag: '🌐' }
-];
+// Centralized Language Configuration Mapping
+const LANGUAGE_CONFIG = {
+  hi: { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳', translationCode: 'hi', ttsCode: 'hi-IN', locale: 'hi-IN' },
+  kn: { code: 'kn', name: 'ಕನ್ನಡ (Kannada)', flag: '🇮🇳', translationCode: 'kn', ttsCode: 'kn-IN', locale: 'kn-IN' },
+  ta: { code: 'ta', name: 'தமிழ் (Tamil)', flag: '🇮🇳', translationCode: 'ta', ttsCode: 'ta-IN', locale: 'ta-IN' },
+  te: { code: 'te', name: 'తెలుగు (Telugu)', flag: '🇮🇳', translationCode: 'te', ttsCode: 'te-IN', locale: 'te-IN' },
+  bn: { code: 'bn', name: 'বাংলা (Bengali)', flag: '🇮🇳', translationCode: 'bn', ttsCode: 'bn-IN', locale: 'bn-IN' },
+  mr: { code: 'mr', name: 'मराठी (Marathi)', flag: '🇮🇳', translationCode: 'mr', ttsCode: 'mr-IN', locale: 'mr-IN' },
+  gu: { code: 'gu', name: 'ગુજરાતી (Gujarati)', flag: '🇮🇳', translationCode: 'gu', ttsCode: 'gu-IN', locale: 'gu-IN' },
+  en: { code: 'en', name: 'English', flag: '🌐', translationCode: 'en', ttsCode: 'en-US', locale: 'en-US' }
+};
+
+const MOCK_LANGUAGES = Object.values(LANGUAGE_CONFIG);
 
 // Complete multi-lingual structured translations
 const MOCK_TRANSLATIONS = {
@@ -39,7 +42,8 @@ const MOCK_TRANSLATIONS = {
     warnings: [
       "Ensure the name on your supporting address document matches your Aadhaar name exactly.",
       "Blurred or cropped document photos will lead to immediate application rejection."
-    ]
+    ],
+    ocrText: "Form No. UIDAI-ADDR-01\nAPPLICATION FOR AADHAAR CARD ADDRESS UPDATE\n1. UID Number: [12 Digits]\n2. Resident Name:\n3. New Residential Address: House No / Street / Landmark / Pincode\n4. Supporting Document: Electricity Bill / Voter ID / Passport\n5. Fee: Rs. 50 (Non-refundable)"
   },
   kn: {
     page_purpose: "ಆಧಾರ್ ಕಾರ್ಡ್ ವಿಳಾಸ ಬದಲಾವಣೆ ಅರ್ಜಿ ಫಾರ್ಮ್ (UIDAI)",
@@ -66,7 +70,8 @@ const MOCK_TRANSLATIONS = {
     warnings: [
       "ನಿಮ್ಮ ವಿಳಾಸ ದಾಖಲೆಯಲ್ಲಿರುವ ಹೆಸರು ಆಧಾರ್ ಕಾರ್ಡ್‌ನಲ್ಲಿರುವ ಹೆಸರಿಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಹೊಂದಿಕೆಯಾಗಬೇಕು.",
       "ಮಸುಕಾದ ಅಥವಾ ಸರಿಯಾಗಿ ಕಾಣಿಸದ ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿದರೆ ಅರ್ಜಿಯನ್ನು ತಿರಸ್ಕರಿಸಲಾಗುತ್ತದೆ."
-    ]
+    ],
+    ocrText: "ಫಾರ್ಮ್ ನಂ. UIDAI-ADDR-01\nಆಧಾರ್ ವಿಳಾಸ ಬದಲಾವಣೆ ಅರ್ಜಿ\n೧. ಆಧಾರ್ ಸಂಖ್ಯೆ: [೧೨ ಅಂಕೆಗಳು]\n೨. ಅರ್ಜಿದಾರರ ಹೆಸರು:\n೩. ಹೊಸ ವಿಳಾಸ:\n೪. ವಿಳಾಸದ ದಾಖಲೆ: ವಿದ್ಯುತ್ ಬಿಲ್ / ರೇಷನ್ ಕಾರ್ಡ್\n೫. ಶುಲ್ಕ: ₹೫೦"
   },
   hi: {
     page_purpose: "आधार कार्ड पता अद्यतन आवेदन फॉर्म (UIDAI)",
@@ -93,7 +98,8 @@ const MOCK_TRANSLATIONS = {
     warnings: [
       "सुनिश्चित करें कि आपके दस्तावेज पर नाम आधार नाम से बिल्कुल मेल खाता है।",
       "धुंधली या कटी हुई फोटो अपलोड करने से आवेदन खारिज कर दिया जाएगा।"
-    ]
+    ],
+    ocrText: "फॉर्म संख्या UIDAI-ADDR-01\nआधार कार्ड पता अद्यतन आवेदन पत्र\n1. आधार नंबर: [12 अंक]\n2. नाम:\n3. नया पता:\n4. पता प्रमाण: बिजली बिल / राशन कार्ड\n5. शुल्क: रु 50"
   },
   ta: {
     page_purpose: "ஆதார் கார்டு முகவரி மாற்ற விண்ணப்பம் (UIDAI)",
@@ -117,7 +123,8 @@ const MOCK_TRANSLATIONS = {
     ],
     warnings: [
       "ஆதாரில் உள்ள பெயரும் சான்றிதழில் உள்ள பெயரும் ஒரே மாதிரியாக இருக்க வேண்டும்."
-    ]
+    ],
+    ocrText: "படிவம் எண். UIDAI-ADDR-01\nஆதார் முகவரி மாற்ற விண்ணப்பம்\n1. ஆதார் எண்: [12 இலக்கங்கள்]"
   },
   te: {
     page_purpose: "ఆధార్ కార్డ్ చిరునామా నవీకరణ ఫారమ్ (UIDAI)",
@@ -135,7 +142,8 @@ const MOCK_TRANSLATIONS = {
     ],
     warnings: [
       "డాక్యుమెంట్‌లోని పేరు ఆధార్ పేరుతో సరిపోలాలి."
-    ]
+    ],
+    ocrText: "ఫారమ్ నం. UIDAI-ADDR-01\nఆధార్ చిరునామా మార్పు దరఖాస్తు"
   },
   bn: {
     page_purpose: "আধার কার্ডের ঠিকানা পরিবর্তনের আবেদন ফরম (UIDAI)",
@@ -145,7 +153,8 @@ const MOCK_TRANSLATIONS = {
     ],
     required_documents: ["বৈধ ঠিকানার প্রমাণপত্র (বিদ্যুৎ বিল/রেশন কার্ড)"],
     steps: ["আপনার আধার নম্বর যাচাই করুন।", "নতুন ঠিকানা পূরণ করুন।"],
-    warnings: ["ডকুমেন্টের নাম এবং আধারের নাম এক হওয়া আবশ্যক।"]
+    warnings: ["ডকুমেন্টের নাম এবং আধারের নাম এক হওয়া আবশ্যক।"],
+    ocrText: "ফর্ম নং UIDAI-ADDR-01\nআধার ঠিকানা পরিবর্তনের আবেদনপত্র"
   },
   mr: {
     page_purpose: "आधार कार्ड पत्ता दुरुस्ती अर्ज (UIDAI)",
@@ -155,7 +164,8 @@ const MOCK_TRANSLATIONS = {
     ],
     required_documents: ["वैध पत्त्याचा पुरावा (वीज बिल / रेशन कार्ड)"],
     steps: ["तुमचा १२ अंकी आधार क्रमांक पडताळून पहा.", "नवीन पत्ता भरा."],
-    warnings: ["पुरावा दस्तऐवजावरील नाव आधारवरील नावाशी तंतोतंत जुळले पाहिजे."]
+    warnings: ["पुरावा दस्तऐवजावरील नाव आधारवरील नावाशी तंतोतंत जुळले पाहिजे."],
+    ocrText: "फॉर्म क्र. UIDAI-ADDR-01\nआधार कार्ड पत्ता बदल अर्ज"
   },
   gu: {
     page_purpose: "આધાર કાર્ડ સરનામું અપડેટ ફોર્મ (UIDAI)",
@@ -165,7 +175,8 @@ const MOCK_TRANSLATIONS = {
     ],
     required_documents: ["સરનામાનો પુરાવો (લાઇટ બિલ / રેશન કાર્ડ)"],
     steps: ["તમારો ૧૨ આંકડાનો આધાર નંબર ચકાસો.", "નવું સરનામું ભરો."],
-    warnings: ["પુરાવા પરનું નામ આધાર કાર્ડ સાથે મળતું હોવું જોઈએ."]
+    warnings: ["પુરાવા પરનું નામ આધાર કાર્ડ સાથે મળતું હોવું જોઈએ."],
+    ocrText: "ફોર્મ નં. UIDAI-ADDR-01\nઆધાર કાર્ડ સરનામું ફેરફાર અરજી"
   }
 };
 
@@ -183,25 +194,28 @@ const api = {
         method: 'POST',
         body: formData
       });
-      if (!res.ok) throw new Error('Analysis failed');
-      return await res.json();
+      if (!res.ok) throw new Error(`Analysis failed with status ${res.status}`);
+      const json = await res.json();
+      return json;
     } catch {
       await new Promise((r) => setTimeout(r, 400));
       const lang = data.target_language || 'hi';
+      const mockData = MOCK_TRANSLATIONS[lang] || MOCK_TRANSLATIONS.en;
       return {
         success: true,
-        ...(MOCK_TRANSLATIONS[lang] || MOCK_TRANSLATIONS.en)
+        ocrText: data.text || mockData.ocrText || "OCR extracted text sample",
+        ...mockData
       };
     }
   },
-  async tts(text, language) {
+  async tts(text, languageCode) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language })
+        body: JSON.stringify({ text, language: languageCode })
       });
-      if (!res.ok) throw new Error('TTS failed');
+      if (!res.ok) throw new Error(`TTS request failed with status ${res.status}`);
       const blob = await res.blob();
       return URL.createObjectURL(blob);
     } catch {
@@ -217,139 +231,173 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null);
-  const [error, setError] = useState(null);
   
-  // Theme state: default is LIGHT mode (isDarkMode = false)
+  // Explicitly separate OCR text and Translated Result
+  const [ocrText, setOcrText] = useState(null);
+  const [translatedResult, setTranslatedResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [showOcrDetails, setShowOcrDetails] = useState(false);
+
+  // Theme state: default light mode
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Audio state
+  // Audio & Voice States
   const [activeAudioKey, setActiveAudioKey] = useState(null);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [audioLabel, setAudioLabel] = useState('');
   const [speechRate, setSpeechRate] = useState(1.0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioError, setAudioError] = useState(null);
 
-  // Representation interactive states
+  const audioRef = useRef(null);
+
+  // Interactive Checklist & Field States
   const [checkedDocs, setCheckedDocs] = useState({});
   const [completedSteps, setCompletedSteps] = useState({});
   const [fieldFilter, setFieldFilter] = useState('');
 
   useEffect(() => {
     return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopAudio();
     };
   }, []);
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setActiveAudioKey(null);
+    setIsAudioLoading(false);
+    setAudioLabel('');
+    setIsPlayingAudio(false);
+  };
 
   const handleLanguageChange = async (newLang) => {
     setSelectedLang(newLang);
     stopAudio();
-    if (results) {
+    setAudioError(null);
+
+    if (translatedResult || ocrText) {
       setLoading(true);
       try {
         const res = await api.analyze({
           image: selectedImage,
-          text: textInput,
+          text: ocrText || textInput,
           target_language: newLang
         });
-        setResults(res);
+        setTranslatedResult(res);
+        if (res.ocrText) setOcrText(res.ocrText);
       } catch {
-        setResults({
+        const fallback = MOCK_TRANSLATIONS[newLang] || MOCK_TRANSLATIONS.en;
+        setTranslatedResult({
           success: true,
-          ...(MOCK_TRANSLATIONS[newLang] || MOCK_TRANSLATIONS.en)
+          ...fallback
         });
+        if (fallback.ocrText) setOcrText(fallback.ocrText);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const stopAudio = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setActiveAudioKey(null);
-    setAudioLabel('');
-    setIsPlayingAudio(false);
-  };
+  const speakText = async (textToSpeak, key, label) => {
+    if (!textToSpeak || !textToSpeak.trim()) return;
 
-  const speakText = async (text, key, label) => {
-    if (!text) return;
-
-    if (activeAudioKey === key && isPlayingAudio) {
+    if (activeAudioKey === key && (isPlayingAudio || isAudioLoading)) {
       stopAudio();
       return;
     }
 
     stopAudio();
+    setAudioError(null);
     setActiveAudioKey(key);
-    setAudioLabel(label || text.slice(0, 40) + '...');
-    setIsPlayingAudio(true);
+    setIsAudioLoading(true);
+    setAudioLabel(label || textToSpeak.slice(0, 40) + '...');
 
-    const audioUrl = await api.tts(text, selectedLang);
+    const langConfig = LANGUAGE_CONFIG[selectedLang] || LANGUAGE_CONFIG.hi;
+    const cleanText = textToSpeak.replace(/\s+/g, ' ').trim();
+
+    // 1. Try Backend Audio API first
+    const audioUrl = await api.tts(cleanText, langConfig.ttsCode || langConfig.code);
     if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.playbackRate = speechRate;
-      audio.onended = () => {
-        setActiveAudioKey(null);
-        setIsPlayingAudio(false);
-      };
-      audio.onerror = () => {
-        setActiveAudioKey(null);
-        setIsPlayingAudio(false);
-      };
-      audio.play();
-      return;
+      try {
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+        audio.playbackRate = speechRate;
+        audio.oncanplaythrough = () => {
+          setIsAudioLoading(false);
+          setIsPlayingAudio(true);
+        };
+        audio.onended = () => {
+          stopAudio();
+        };
+        audio.onerror = () => {
+          stopAudio();
+          setAudioError('Failed to play server audio. Falling back to device voice.');
+          fallbackBrowserSpeech(cleanText, langConfig);
+        };
+        await audio.play();
+        setIsAudioLoading(false);
+        setIsPlayingAudio(true);
+        return;
+      } catch {
+        // Continue to browser fallback below
+      }
     }
 
+    // 2. Fallback to Browser Web Speech API
+    fallbackBrowserSpeech(cleanText, langConfig);
+  };
+
+  const fallbackBrowserSpeech = (cleanText, langConfig) => {
     if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
 
-      const langMap = {
-        hi: 'hi-IN',
-        kn: 'kn-IN',
-        ta: 'ta-IN',
-        te: 'te-IN',
-        bn: 'bn-IN',
-        mr: 'mr-IN',
-        gu: 'gu-IN',
-        en: 'en-US'
-      };
-
-      utterance.lang = langMap[selectedLang] || 'hi-IN';
+      utterance.lang = langConfig.locale || 'hi-IN';
       utterance.rate = speechRate;
 
       const voices = window.speechSynthesis.getVoices();
-      const regionalVoice = voices.find((v) => v.lang.startsWith(selectedLang) || v.lang === langMap[selectedLang]);
+      const regionalVoice = voices.find(
+        (v) => v.lang.toLowerCase() === langConfig.locale.toLowerCase() ||
+               v.lang.toLowerCase().startsWith(langConfig.code.toLowerCase())
+      );
       if (regionalVoice) {
         utterance.voice = regionalVoice;
       }
 
+      utterance.onstart = () => {
+        setIsAudioLoading(false);
+        setIsPlayingAudio(true);
+      };
       utterance.onend = () => {
-        setActiveAudioKey(null);
-        setIsPlayingAudio(false);
+        stopAudio();
       };
       utterance.onerror = () => {
-        setActiveAudioKey(null);
-        setIsPlayingAudio(false);
+        stopAudio();
+        setAudioError('Voice synthesis error occurred for this language.');
       };
+
       window.speechSynthesis.speak(utterance);
     } else {
-      setActiveAudioKey(null);
-      setIsPlayingAudio(false);
-      alert('Audio playback is not supported on this browser.');
+      stopAudio();
+      setAudioError('Audio playback is not supported on this browser.');
     }
   };
 
   const speakFullOverview = () => {
-    if (!results) return;
-    const fullSpeechText = `
-      ${results.page_purpose}.
-      ${results.simple_explanation}.
-      ${results.steps ? 'Steps to follow: ' + results.steps.join('. ') : ''}.
+    if (!translatedResult) return;
+    const overviewSpeechText = `
+      ${translatedResult.page_purpose || ''}.
+      ${translatedResult.simple_explanation || ''}.
+      ${translatedResult.steps ? 'Steps to follow: ' + translatedResult.steps.join('. ') : ''}.
     `;
-    speakText(fullSpeechText, 'full_overview', 'Full Document Voice Walkthrough');
+    speakText(overviewSpeechText, 'full_overview', 'Full Document Voice Guide');
   };
 
   const toggleDocCheck = (idx) => {
@@ -362,73 +410,90 @@ export default function App() {
 
   const loadSampleDemo = () => {
     setInputTab('text');
-    setTextInput("Form No. UIDAI-ADDR-01: Application for Aadhaar Address Update. Please provide 12-digit UID, new residence address with 6-digit Pincode, and upload valid proof of address (Utility bill less than 3 months old). Fee ₹50.");
+    const sample = "Form No. UIDAI-ADDR-01: Application for Aadhaar Address Update. Please provide 12-digit UID, new residence address with 6-digit Pincode, and upload valid proof of address (Utility bill less than 3 months old). Fee ₹50.";
+    setTextInput(sample);
     setSelectedImage(null);
     setImagePreview(null);
     setError(null);
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (file) {
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
       setError(null);
+      stopAudio();
     }
   };
 
   const handleAnalyze = async () => {
     if (inputTab === 'upload' && !selectedImage) {
-      setError('Please upload or snap a picture of the government form or document.');
+      setError('Please upload or snap a photo of a government form or document.');
       return;
     }
     if (inputTab === 'text' && !textInput.trim()) {
-      setError('Please paste or type text from the government page.');
+      setError('Please paste or type text from the government portal or form.');
       return;
     }
 
     setLoading(true);
     setError(null);
+    stopAudio();
+
     try {
       const res = await api.analyze({
         image: selectedImage,
         text: textInput,
         target_language: selectedLang
       });
-      setResults(res);
-      setCheckedDocs({});
-      setCompletedSteps({});
-    } catch {
-      setError('Failed to analyze document. Please try again.');
+
+      if (res && res.success !== false) {
+        setTranslatedResult(res);
+        setOcrText(res.ocrText || (inputTab === 'text' ? textInput : 'Document OCR processed successfully.'));
+        setCheckedDocs({});
+        setCompletedSteps({});
+      } else {
+        throw new Error(res?.message || 'Analysis returned invalid result.');
+      }
+    } catch (err) {
+      setError(`Failed to analyze document (${err.message || 'Network Error'}). Using fallback offline translation.`);
+      const fallback = MOCK_TRANSLATIONS[selectedLang] || MOCK_TRANSLATIONS.en;
+      setTranslatedResult({
+        success: true,
+        ...fallback
+      });
+      setOcrText(fallback.ocrText || textInput);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredFields = results?.fields?.filter((f) =>
+  const filteredFields = translatedResult?.fields?.filter((f) =>
     f.name.toLowerCase().includes(fieldFilter.toLowerCase()) ||
     f.explanation.toLowerCase().includes(fieldFilter.toLowerCase())
   ) || [];
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-200 flex flex-col ${
+    <div className={`min-h-screen font-sans transition-colors duration-200 flex flex-col overflow-x-hidden ${
       isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
+      
       {/* Header */}
       <header className={`sticky top-0 z-50 border-b backdrop-blur-md shadow-sm transition-colors ${
         isDarkMode ? 'bg-slate-900/95 border-slate-800 text-slate-100' : 'bg-white/95 border-amber-200/80 text-slate-900'
       }`}>
-        <div className="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-extrabold text-white text-lg shadow-md tracking-tight">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-extrabold text-white text-lg shadow-md tracking-tight shrink-0">
               Gov
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-amber-600 dark:text-amber-400">
+                <h1 className="text-lg sm:text-xl font-black tracking-tight text-amber-600 dark:text-amber-400">
                   GovSahayak
                 </h1>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
                   Govt Form Voice Assistant
                 </span>
               </div>
@@ -438,17 +503,17 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Language Selector */}
             <div className="flex items-center space-x-1.5">
-              <label htmlFor="language-select" className={`text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+              <label htmlFor="language-select" className={`text-xs sm:text-sm font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                 🌐 Language:
               </label>
               <select
                 id="language-select"
                 value={selectedLang}
                 onChange={(e) => handleLanguageChange(e.target.value)}
-                className={`font-bold rounded-lg text-xs px-2.5 py-1.5 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer transition border ${
+                className={`font-bold rounded-xl text-xs sm:text-sm px-3 py-1.5 focus:ring-2 focus:ring-amber-500 outline-none cursor-pointer transition border ${
                   isDarkMode
                     ? 'bg-slate-900 border-amber-500/60 text-amber-300'
                     : 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
@@ -466,24 +531,24 @@ export default function App() {
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               title="Toggle Light/Dark Theme"
-              className={`px-2.5 py-1.5 text-xs font-bold rounded-lg border transition flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl border transition flex items-center gap-1.5 ${
                 isDarkMode
                   ? 'bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-700'
                   : 'bg-amber-100/70 border-amber-300 text-amber-900 hover:bg-amber-200'
               }`}
             >
-              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Persistent Active Audio Player Bar */}
-      {isPlayingAudio && (
+      {/* Active Audio Player Bar */}
+      {(isPlayingAudio || isAudioLoading) && (
         <div className={`sticky top-[61px] z-40 border-b px-4 py-2 transition-all animate-fade-in shadow-md ${
           isDarkMode ? 'bg-amber-950/90 border-amber-700 text-amber-100' : 'bg-amber-50 border-amber-300 text-amber-950'
         }`}>
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="flex items-end gap-0.5 h-4 text-amber-600 dark:text-amber-400">
                 <span className="sound-wave-bar"></span>
@@ -492,21 +557,24 @@ export default function App() {
                 <span className="sound-wave-bar"></span>
               </div>
               <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                🔊 Playing Voice Guide:
+                {isAudioLoading ? '⏳ Generating Audio...' : '🔊 Playing Voice Guide:'}
               </span>
-              <span className="text-xs font-medium truncate max-w-[240px] sm:max-w-xs italic">
-                "{audioLabel}"
+              <span className="text-xs font-medium truncate max-w-[200px] sm:max-w-md italic">
+                "{audioLabel}" ({LANGUAGE_CONFIG[selectedLang]?.name})
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Speed controls */}
-              <div className="flex items-center gap-1 bg-white/70 dark:bg-slate-900/80 px-1.5 py-0.5 rounded-md border border-amber-300 dark:border-amber-700">
+              <div className="flex items-center gap-1 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-lg border border-amber-300 dark:border-amber-700">
                 <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">Speed:</span>
                 {[0.8, 1.0, 1.25].map((speed) => (
                   <button
                     key={speed}
-                    onClick={() => setSpeechRate(speed)}
+                    onClick={() => {
+                      setSpeechRate(speed);
+                      if (audioRef.current) audioRef.current.playbackRate = speed;
+                    }}
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                       speechRate === speed
                         ? 'bg-amber-500 text-white'
@@ -521,419 +589,483 @@ export default function App() {
               {/* Stop Button */}
               <button
                 onClick={stopAudio}
-                className="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded-md font-bold text-xs shadow transition flex items-center gap-1"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg font-bold text-xs shadow transition flex items-center gap-1"
               >
-                ⏹️ Stop Audio
+                ⏹️ Stop
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6">
-        
-        {/* Input & Form Tab Controls */}
-        <section className={`border rounded-2xl p-5 shadow-sm transition-colors ${
-          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-        }`}>
-          <div className="flex items-center justify-between border-b pb-3 mb-4 flex-wrap gap-2 border-slate-200 dark:border-slate-800">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setInputTab('upload')}
-                className={`px-3.5 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
-                  inputTab === 'upload'
-                    ? 'bg-amber-500 text-white shadow'
-                    : isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                📷 Upload Screenshot
-              </button>
-              <button
-                onClick={() => setInputTab('text')}
-                className={`px-3.5 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
-                  inputTab === 'text'
-                    ? 'bg-amber-500 text-white shadow'
-                    : isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                ✏️ Paste Text / URL
-              </button>
-            </div>
+      {/* Main Container - Fully Responsive Grid Layout */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* Left Column: Input & Form Tab Controls */}
+          <div className="lg:col-span-5 space-y-6">
+            <section className={`border rounded-2xl p-5 shadow-sm transition-colors ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <div className="flex items-center justify-between border-b pb-3 mb-4 flex-wrap gap-2 border-slate-200 dark:border-slate-800">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setInputTab('upload')}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
+                      inputTab === 'upload'
+                        ? 'bg-amber-500 text-white shadow'
+                        : isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    📷 Upload Image
+                  </button>
+                  <button
+                    onClick={() => setInputTab('text')}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
+                      inputTab === 'text'
+                        ? 'bg-amber-500 text-white shadow'
+                        : isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✏️ Paste Text
+                  </button>
+                </div>
 
-            <button
-              onClick={loadSampleDemo}
-              className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition flex items-center gap-1 ${
-                isDarkMode
-                  ? 'bg-slate-800 border-amber-500/40 text-amber-300 hover:bg-slate-700'
-                  : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
-              }`}
-            >
-              ⚡ Load Aadhaar Sample
-            </button>
+                <button
+                  onClick={loadSampleDemo}
+                  className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition flex items-center gap-1 ${
+                    isDarkMode
+                      ? 'bg-slate-800 border-amber-500/40 text-amber-300 hover:bg-slate-700'
+                      : 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                  }`}
+                >
+                  ⚡ Sample Demo
+                </button>
+              </div>
+
+              {/* Upload Area */}
+              {inputTab === 'upload' ? (
+                <div className="space-y-3">
+                  <div className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 ${
+                    isDarkMode
+                      ? 'border-amber-500/30 hover:border-amber-400 bg-slate-950/40'
+                      : 'border-amber-300 hover:border-amber-500 bg-amber-50/40'
+                  }`}>
+                    {imagePreview ? (
+                      <div className="space-y-3 w-full">
+                        <img
+                          src={imagePreview}
+                          alt="Government Page Preview"
+                          className="max-h-64 w-full rounded-lg border border-slate-300 dark:border-slate-700 object-contain shadow-sm bg-slate-900/5 dark:bg-slate-900"
+                        />
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                          ✓ Image loaded for multi-lingual OCR & Voice analysis
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 py-4">
+                        <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-2xl">
+                          📄
+                        </div>
+                        <div>
+                          <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                            Upload photo or screenshot of any Indian Govt Form
+                          </p>
+                          <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Supports Aadhaar, Passport, Ration Card, Voter ID, etc.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                      id="screenshot-input"
+                    />
+                    <label
+                      htmlFor="screenshot-input"
+                      className="cursor-pointer bg-slate-800 hover:bg-slate-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold px-4 py-2 rounded-xl text-xs shadow transition inline-block"
+                    >
+                      {imagePreview ? 'Change Image' : 'Browse File'}
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    rows={6}
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    placeholder="Paste government portal text or form requirements here..."
+                    className={`w-full rounded-xl p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none transition border ${
+                      isDarkMode
+                        ? 'bg-slate-950 border-slate-700 text-slate-100'
+                        : 'bg-slate-50 border-slate-300 text-slate-900'
+                    }`}
+                  ></textarea>
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-3 bg-red-50 dark:bg-red-950/80 border border-red-300 dark:border-red-700 rounded-xl p-3 text-red-800 dark:text-red-200 text-xs font-medium flex items-center gap-2">
+                  <span className="text-base">⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                onClick={handleAnalyze}
+                disabled={loading}
+                className="mt-4 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Analyzing for {LANGUAGE_CONFIG[selectedLang]?.name}...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔍 Analyze & Voice Guide</span>
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                      {LANGUAGE_CONFIG[selectedLang]?.name}
+                    </span>
+                  </>
+                )}
+              </button>
+            </section>
+
+            {/* Extracted Raw OCR Card */}
+            {ocrText && (
+              <div className={`border rounded-2xl p-4 shadow-sm transition-colors ${
+                isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <span>🔤 Extracted OCR Source Text</span>
+                  </span>
+                  <button
+                    onClick={() => setShowOcrDetails(!showOcrDetails)}
+                    className="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline"
+                  >
+                    {showOcrDetails ? 'Hide OCR' : 'View Raw OCR'}
+                  </button>
+                </div>
+                {showOcrDetails && (
+                  <pre className={`mt-3 p-3 rounded-xl text-[11px] font-mono whitespace-pre-wrap leading-relaxed border ${
+                    isDarkMode ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+                  }`}>
+                    {ocrText}
+                  </pre>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Upload Area */}
-          {inputTab === 'upload' ? (
-            <div className="space-y-3">
-              <div className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 ${
-                isDarkMode
-                  ? 'border-amber-500/30 hover:border-amber-400 bg-slate-950/40'
-                  : 'border-amber-300 hover:border-amber-500 bg-amber-50/40'
+          {/* Right Column: Results & Multilingual Audio Guide */}
+          <div className="lg:col-span-7">
+            {translatedResult ? (
+              <section className={`border rounded-2xl p-5 shadow-sm space-y-6 animate-fade-in transition-colors ${
+                isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
               }`}>
-                {imagePreview ? (
-                  <div className="space-y-3 w-full">
-                    <img
-                      src={imagePreview}
-                      alt="Government Page Preview"
-                      className="max-h-56 mx-auto rounded-lg border border-slate-300 dark:border-slate-700 object-contain shadow-sm"
-                    />
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                      ✓ Image loaded ready for multi-lingual translation
-                    </p>
+                
+                {/* Audio Error Alert */}
+                {audioError && (
+                  <div className="bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-xl p-3 text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{audioError}</span>
+                    </span>
+                    <button onClick={() => setAudioError(null)} className="text-xs font-bold hover:underline">
+                      Dismiss
+                    </button>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-2xl">
-                      📄
+                )}
+
+                {/* Overview Banner & Voice Walkthrough Button */}
+                <div className={`border rounded-2xl p-4 transition-all ${
+                  activeAudioKey === 'full_overview'
+                    ? 'ring-2 ring-amber-500 bg-amber-50/90 dark:bg-amber-950/50'
+                    : isDarkMode ? 'bg-slate-950/80 border-slate-800' : 'bg-amber-50/60 border-amber-200/80'
+                }`}>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-amber-500 text-white uppercase tracking-wider">
+                          Official Purpose ({LANGUAGE_CONFIG[selectedLang]?.name})
+                        </span>
+                        {activeAudioKey === 'full_overview' && (
+                          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse flex items-center gap-1">
+                            🔊 Speaking now...
+                          </span>
+                        )}
+                      </div>
+                      <h3 className={`text-lg sm:text-xl font-black ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                        {translatedResult.page_purpose}
+                      </h3>
+                      <p className={`text-xs sm:text-sm leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                        {translatedResult.simple_explanation}
+                      </p>
                     </div>
-                    <div>
-                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                        Upload photo or screenshot of any Indian Govt Form
-                      </p>
-                      <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Supports Aadhaar, Passport, Ration Card, Voter ID, Ration, etc.
-                      </p>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={speakFullOverview}
+                        disabled={isAudioLoading}
+                        className={`px-4 py-2 rounded-xl font-bold text-xs shadow transition flex items-center gap-2 border ${
+                          activeAudioKey === 'full_overview'
+                            ? 'bg-red-600 text-white border-red-700'
+                            : 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600'
+                        }`}
+                      >
+                        <span>
+                          {activeAudioKey === 'full_overview'
+                            ? '⏹️ Stop Voice Overview'
+                            : `🔊 Listen in ${LANGUAGE_CONFIG[selectedLang]?.name}`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Document Checklist Representation */}
+                {translatedResult.required_documents && translatedResult.required_documents.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                        <span>📋 Required Documents Checklist</span>
+                        <span className="text-[11px] font-normal text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2.5 py-0.5 rounded-full">
+                          {Object.values(checkedDocs).filter(Boolean).length} / {translatedResult.required_documents.length} Ready
+                        </span>
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      {translatedResult.required_documents.map((doc, idx) => {
+                        const docKey = `doc-${idx}`;
+                        const isChecked = !!checkedDocs[idx];
+                        const isSpeaking = activeAudioKey === docKey;
+
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 ${
+                              isSpeaking
+                                ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
+                                : isChecked
+                                ? isDarkMode ? 'bg-emerald-950/30 border-emerald-800/80' : 'bg-emerald-50/60 border-emerald-200'
+                                : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50/80 border-slate-200'
+                            }`}
+                          >
+                            <label className="flex items-start gap-3 cursor-pointer flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleDocCheck(idx)}
+                                className="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer rounded shrink-0"
+                              />
+                              <div>
+                                <span className={`text-xs sm:text-sm font-semibold block ${
+                                  isChecked
+                                    ? 'line-through text-slate-400 dark:text-slate-500'
+                                    : isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                                }`}>
+                                  {doc}
+                                </span>
+                              </div>
+                            </label>
+
+                            <button
+                              onClick={() => speakText(doc, docKey, `Document requirement: ${doc}`)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0 ${
+                                isSpeaking
+                                  ? 'bg-amber-500 text-white border-amber-600'
+                                  : isDarkMode
+                                  ? 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
+                                  : 'bg-white text-amber-800 border-amber-300 hover:bg-amber-50'
+                              }`}
+                            >
+                              🔊 {isSpeaking ? 'Stop' : 'Listen'}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="screenshot-input"
-                />
-                <label
-                  htmlFor="screenshot-input"
-                  className="cursor-pointer bg-slate-800 hover:bg-slate-700 dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-slate-950 font-bold px-4 py-2 rounded-xl text-xs shadow transition inline-block"
-                >
-                  {imagePreview ? 'Choose Different Image' : 'Browse File'}
-                </label>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <textarea
-                rows={4}
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Paste government portal text or form requirements here..."
-                className={`w-full rounded-xl p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none transition border ${
-                  isDarkMode
-                    ? 'bg-slate-950 border-slate-700 text-slate-100'
-                    : 'bg-slate-50 border-slate-300 text-slate-900'
-                }`}
-              ></textarea>
-            </div>
-          )}
 
-          {error && (
-            <div className="mt-3 bg-red-50 dark:bg-red-950/80 border border-red-300 dark:border-red-700 rounded-xl p-3 text-red-800 dark:text-red-200 text-xs font-medium flex items-center gap-2">
-              <span className="text-base">⚠️</span>
-              <span>{error}</span>
-            </div>
-          )}
+                {/* Interactive Step-by-Step Guidance */}
+                {translatedResult.steps && translatedResult.steps.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                        <span>🪜 Guided Step-by-Step Procedure</span>
+                      </h3>
+                    </div>
 
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="mt-4 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <span>Translating & Analyzing for {MOCK_LANGUAGES.find(l=>l.code===selectedLang)?.name}...</span>
-              </>
-            ) : (
-              <>
-                <span>🔍 Analyze & Voice Guide</span>
-                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-bold">
-                  {MOCK_LANGUAGES.find(l=>l.code===selectedLang)?.name}
-                </span>
-              </>
-            )}
-          </button>
-        </section>
+                    <div className="space-y-2">
+                      {translatedResult.steps.map((step, idx) => {
+                        const stepKey = `step-${idx}`;
+                        const isDone = !!completedSteps[idx];
+                        const isSpeaking = activeAudioKey === stepKey;
 
-        {/* Results Interface */}
-        {results && (
-          <section className={`border rounded-2xl p-5 shadow-sm space-y-6 animate-fade-in transition-colors ${
-            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-          }`}>
-            
-            {/* Overview Banner & Voice Walkthrough Button */}
-            <div className={`border rounded-2xl p-4 transition-all ${
-              activeAudioKey === 'full_overview'
-                ? 'ring-2 ring-amber-500 bg-amber-50/90 dark:bg-amber-950/50'
-                : isDarkMode ? 'bg-slate-950/80 border-slate-800' : 'bg-amber-50/60 border-amber-200/80'
-            }`}>
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-amber-500 text-white uppercase tracking-wider">
-                      Official Purpose
-                    </span>
-                    {activeAudioKey === 'full_overview' && (
-                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse flex items-center gap-1">
-                        🔊 Speaking now...
-                      </span>
-                    )}
-                  </div>
-                  <h3 className={`text-lg font-black ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
-                    {results.page_purpose}
-                  </h3>
-                  <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    {results.simple_explanation}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={speakFullOverview}
-                    className={`px-4 py-2 rounded-xl font-bold text-xs shadow transition flex items-center gap-2 border ${
-                      activeAudioKey === 'full_overview'
-                        ? 'bg-red-600 text-white border-red-700'
-                        : 'bg-amber-500 hover:bg-amber-600 text-white border-amber-600'
-                    }`}
-                  >
-                    <span>{activeAudioKey === 'full_overview' ? '⏹️ Stop Voice Overview' : '🔊 Listen Full Overview'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Document Checklist Representation */}
-            {results.required_documents && results.required_documents.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                    <span>📋 Required Documents Checklist</span>
-                    <span className="text-[11px] font-normal text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">
-                      {Object.values(checkedDocs).filter(Boolean).length} / {results.required_documents.length} Ready
-                    </span>
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  {results.required_documents.map((doc, idx) => {
-                    const docKey = `doc-${idx}`;
-                    const isChecked = !!checkedDocs[idx];
-                    const isSpeaking = activeAudioKey === docKey;
-
-                    return (
-                      <div
-                        key={idx}
-                        className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 ${
-                          isSpeaking
-                            ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
-                            : isChecked
-                            ? isDarkMode ? 'bg-emerald-950/30 border-emerald-800/80' : 'bg-emerald-50/60 border-emerald-200'
-                            : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50/80 border-slate-200'
-                        }`}
-                      >
-                        <label className="flex items-start gap-3 cursor-pointer flex-1">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggleDocCheck(idx)}
-                            className="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer rounded"
-                          />
-                          <div>
-                            <span className={`text-xs font-semibold block ${
-                              isChecked
-                                ? 'line-through text-slate-400 dark:text-slate-500'
-                                : isDarkMode ? 'text-slate-200' : 'text-slate-800'
-                            }`}>
-                              {doc}
-                            </span>
-                          </div>
-                        </label>
-
-                        <button
-                          onClick={() => speakText(doc, docKey, `Document requirement: ${doc}`)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0 ${
-                            isSpeaking
-                              ? 'bg-amber-500 text-white border-amber-600'
-                              : isDarkMode
-                              ? 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
-                              : 'bg-white text-amber-800 border-amber-300 hover:bg-amber-50'
-                          }`}
-                        >
-                          🔊 {isSpeaking ? 'Stop' : 'Listen'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Interactive Step-by-Step Guidance */}
-            {results.steps && results.steps.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                    <span>🪜 Guided Step-by-Step Procedure</span>
-                  </h3>
-                </div>
-
-                <div className="space-y-2">
-                  {results.steps.map((step, idx) => {
-                    const stepKey = `step-${idx}`;
-                    const isDone = !!completedSteps[idx];
-                    const isSpeaking = activeAudioKey === stepKey;
-
-                    return (
-                      <div
-                        key={idx}
-                        className={`p-3.5 rounded-xl border transition flex items-start justify-between gap-3 ${
-                          isSpeaking
-                            ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
-                            : isDone
-                            ? isDarkMode ? 'bg-emerald-950/20 border-emerald-800/60' : 'bg-emerald-50/40 border-emerald-200'
-                            : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-white border-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3 flex-1">
-                          <button
-                            onClick={() => toggleStepComplete(idx)}
-                            className={`w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 transition ${
-                              isDone
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-amber-500 text-white'
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-3.5 rounded-xl border transition flex items-start justify-between gap-3 ${
+                              isSpeaking
+                                ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
+                                : isDone
+                                ? isDarkMode ? 'bg-emerald-950/20 border-emerald-800/60' : 'bg-emerald-50/40 border-emerald-200'
+                                : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-white border-slate-200'
                             }`}
                           >
-                            {isDone ? '✓' : idx + 1}
-                          </button>
-                          <div>
-                            <p className={`text-xs font-medium ${
-                              isDone ? 'line-through text-slate-400 dark:text-slate-500' : isDarkMode ? 'text-slate-200' : 'text-slate-800'
-                            }`}>
-                              {step}
+                            <div className="flex items-start gap-3 flex-1">
+                              <button
+                                onClick={() => toggleStepComplete(idx)}
+                                className={`w-6 h-6 rounded-full font-black text-xs flex items-center justify-center shrink-0 transition ${
+                                  isDone
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-amber-500 text-white'
+                                }`}
+                              >
+                                {isDone ? '✓' : idx + 1}
+                              </button>
+                              <div>
+                                <p className={`text-xs sm:text-sm font-medium ${
+                                  isDone ? 'line-through text-slate-400 dark:text-slate-500' : isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                                }`}>
+                                  {step}
+                                </p>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => speakText(`Step ${idx + 1}: ${step}`, stepKey, `Step ${idx + 1}: ${step}`)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0 ${
+                                isSpeaking
+                                  ? 'bg-amber-500 text-white border-amber-600'
+                                  : isDarkMode
+                                  ? 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
+                                  : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
+                              }`}
+                            >
+                              🔊 {isSpeaking ? 'Stop' : 'Listen'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Fields Explanation Representation */}
+                {translatedResult.fields && translatedResult.fields.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h3 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                        <span>✏️ Form Fields Guide</span>
+                        <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                          ({filteredFields.length} fields)
+                        </span>
+                      </h3>
+
+                      {/* Filter Input */}
+                      <input
+                        type="text"
+                        placeholder="Search field..."
+                        value={fieldFilter}
+                        onChange={(e) => setFieldFilter(e.target.value)}
+                        className={`text-xs px-3 py-1 rounded-lg border outline-none transition ${
+                          isDarkMode
+                            ? 'bg-slate-950 border-slate-700 text-slate-200'
+                            : 'bg-slate-50 border-slate-300 text-slate-800'
+                        }`}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {filteredFields.map((field, idx) => {
+                        const fieldKey = `field-${idx}`;
+                        const isSpeaking = activeAudioKey === fieldKey;
+
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-3.5 rounded-xl border transition space-y-1.5 ${
+                              isSpeaking
+                                ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
+                                : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50/80 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                                {field.name}
+                              </span>
+                              <button
+                                onClick={() => speakText(`${field.name}: ${field.explanation}`, fieldKey, `Field: ${field.name}`)}
+                                className={`text-[10px] sm:text-xs px-2 py-0.5 rounded font-bold border transition ${
+                                  isSpeaking
+                                    ? 'bg-amber-500 text-white border-amber-600'
+                                    : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-200'
+                                }`}
+                              >
+                                🔊 {isSpeaking ? 'Stop' : 'Listen'}
+                              </button>
+                            </div>
+                            <p className={`text-xs leading-normal ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                              {field.explanation}
                             </p>
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
-                        <button
-                          onClick={() => speakText(`Step ${idx + 1}: ${step}`, stepKey, `Step ${idx + 1}: ${step}`)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0 ${
-                            isSpeaking
-                              ? 'bg-amber-500 text-white border-amber-600'
-                              : isDarkMode
-                              ? 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
-                              : 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
-                          }`}
-                        >
-                          🔊 {isSpeaking ? 'Stop' : 'Listen'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Form Fields Explanation Representation */}
-            {results.fields && results.fields.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <h3 className={`text-sm font-bold flex items-center gap-2 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                    <span>✏️ Form Fields Guide</span>
-                    <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
-                      ({filteredFields.length} fields)
-                    </span>
-                  </h3>
-
-                  {/* Filter Input */}
-                  <input
-                    type="text"
-                    placeholder="Search field..."
-                    value={fieldFilter}
-                    onChange={(e) => setFieldFilter(e.target.value)}
-                    className={`text-xs px-3 py-1 rounded-lg border outline-none transition ${
-                      isDarkMode
-                        ? 'bg-slate-950 border-slate-700 text-slate-200'
-                        : 'bg-slate-50 border-slate-300 text-slate-800'
-                    }`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {filteredFields.map((field, idx) => {
-                    const fieldKey = `field-${idx}`;
-                    const isSpeaking = activeAudioKey === fieldKey;
-
-                    return (
-                      <div
-                        key={idx}
-                        className={`p-3.5 rounded-xl border transition space-y-1.5 ${
-                          isSpeaking
-                            ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-950/50 border-amber-300'
-                            : isDarkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50/80 border-slate-200'
-                        }`}
+                {/* Important Warnings Representation */}
+                {translatedResult.warnings && translatedResult.warnings.length > 0 && (
+                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
+                        <span>⚠️ Important Safety Warnings</span>
+                      </h3>
+                      <button
+                        onClick={() => speakText(`Important Warnings: ${translatedResult.warnings.join('. ')}`, 'warnings', 'Safety Warnings')}
+                        className="text-[11px] sm:text-xs font-bold text-amber-800 dark:text-amber-300 hover:underline flex items-center gap-1"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-amber-600 dark:text-amber-400 text-xs">
-                            {field.name}
-                          </span>
-                          <button
-                            onClick={() => speakText(`${field.name}: ${field.explanation}`, fieldKey, `Field: ${field.name}`)}
-                            className={`text-[10px] px-2 py-0.5 rounded font-bold border transition ${
-                              isSpeaking
-                                ? 'bg-amber-500 text-white border-amber-600'
-                                : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-200'
-                            }`}
-                          >
-                            🔊 {isSpeaking ? 'Stop' : 'Listen'}
-                          </button>
-                        </div>
-                        <p className={`text-xs leading-normal ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                          {field.explanation}
-                        </p>
-                      </div>
-                    );
-                  })}
+                        🔊 Listen Warnings
+                      </button>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {translatedResult.warnings.map((warn, idx) => (
+                        <li key={idx} className="text-xs sm:text-sm text-amber-950 dark:text-amber-200 flex items-start gap-2">
+                          <span className="text-amber-600 font-bold shrink-0">!</span>
+                          <span>{warn}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            ) : (
+              <div className={`border rounded-2xl p-10 text-center space-y-3 transition-colors ${
+                isDarkMode ? 'bg-slate-900/50 border-slate-800 text-slate-400' : 'bg-white/80 border-slate-200 text-slate-500'
+              }`}>
+                <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-3xl">
+                  🎧
                 </div>
+                <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
+                  Ready for Govt Form Multi-lingual Analysis
+                </h3>
+                <p className="text-xs max-w-md mx-auto">
+                  Upload an image of any government application form or paste portal requirements on the left to generate simplified explanations and voice guidance in your chosen Indian language.
+                </p>
               </div>
             )}
-
-            {/* Important Warnings Representation */}
-            {results.warnings && results.warnings.length > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <span>⚠️ Important Safety Warnings</span>
-                  </h3>
-                  <button
-                    onClick={() => speakText(`Important Warnings: ${results.warnings.join('. ')}`, 'warnings', 'Safety Warnings')}
-                    className="text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline flex items-center gap-1"
-                  >
-                    🔊 Listen Warnings
-                  </button>
-                </div>
-                <ul className="space-y-1.5">
-                  {results.warnings.map((warn, idx) => (
-                    <li key={idx} className="text-xs text-amber-950 dark:text-amber-200 flex items-start gap-2">
-                      <span className="text-amber-600 font-bold shrink-0">!</span>
-                      <span>{warn}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
-        )}
+          </div>
+        </div>
       </main>
     </div>
   );
