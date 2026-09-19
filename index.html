@@ -7,17 +7,17 @@
     <title>GovSahayak - Accessible Government Page Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Extension Popup Sizing */
-      body {
-        width: 420px;
-        min-height: 560px;
+      html, body {
+        width: 100%;
+        min-height: 100vh;
         margin: 0;
-        overflow-x: hidden;
+        padding: 0;
       }
     </style>
   </head>
-  <body class="bg-slate-900 text-slate-100">
+  <body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
+
