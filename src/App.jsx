@@ -67,18 +67,22 @@ async function translateText(text, targetLang) {
     if (!res.ok) throw new Error(`Translation service returned status ${res.status}`);
     const data = await res.json();
     if (data && data[0] && Array.isArray(data[0])) {
-      const translated = data[0].map((item) => item[0]).filter(Boolean).join('');
+      const translated = data[0]
+        .map((item) => (Array.isArray(item) ? item[0] : ''))
+        .filter(Boolean)
+        .join('');
       if (translated && translated.trim()) return translated;
     }
     return text;
   } catch (err) {
-    console.warn('Translate fetch fallback:', err);
+    console.warn(`Translate fetch fallback for ${targetLang}:`, err);
     return text;
   }
 }
 
-// Translate full structured document
+// Translate full structured document dynamically into target language
 async function translateStructuredDoc(baseDoc, targetLang) {
+  if (!baseDoc) return null;
   if (targetLang === 'en') return baseDoc;
 
   try {
@@ -87,21 +91,21 @@ async function translateStructuredDoc(baseDoc, targetLang) {
 
     const fields = await Promise.all(
       (baseDoc.fields || []).map(async (f) => ({
-        name: await translateText(f.name, targetLang),
-        explanation: await translateText(f.explanation, targetLang)
+        name: await translateText(f.name || '', targetLang),
+        explanation: await translateText(f.explanation || '', targetLang)
       }))
     );
 
     const required_documents = await Promise.all(
-      (baseDoc.required_documents || []).map((doc) => translateText(doc, targetLang))
+      (baseDoc.required_documents || []).map((doc) => translateText(doc || '', targetLang))
     );
 
     const steps = await Promise.all(
-      (baseDoc.steps || []).map((step) => translateText(step, targetLang))
+      (baseDoc.steps || []).map((step) => translateText(step || '', targetLang))
     );
 
     const warnings = await Promise.all(
-      (baseDoc.warnings || []).map((warn) => translateText(warn, targetLang))
+      (baseDoc.warnings || []).map((warn) => translateText(warn || '', targetLang))
     );
 
     return {
@@ -114,7 +118,8 @@ async function translateStructuredDoc(baseDoc, targetLang) {
       warnings,
       ocrText: baseDoc.ocrText
     };
-  } catch {
+  } catch (err) {
+    console.warn(`Failed to translate structured document to ${targetLang}`, err);
     return baseDoc;
   }
 }
@@ -123,7 +128,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const api = {
   async analyze(data) {
-    const targetLang = data.target_language || 'hi';
+    const targetLang = data.target_language || 'en';
     try {
       const formData = new FormData();
       if (data.image) formData.append('image', data.image);
@@ -177,7 +182,7 @@ const api = {
   },
 
   async tts(text, languageCode) {
-    const langConfig = LANGUAGE_CONFIG[languageCode] || LANGUAGE_CONFIG.hi;
+    const langConfig = LANGUAGE_CONFIG[languageCode] || LANGUAGE_CONFIG.en;
     const ttsCode = langConfig.ttsCode || languageCode;
     console.log("TTS text:", text);
     console.log("TTS language:", ttsCode);
